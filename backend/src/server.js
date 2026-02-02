@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/database.js';
 import redirectRoutes from './routes/redirect.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import linksRoutes from './routes/links.routes.js';
 
 dotenv.config();
 
@@ -17,7 +18,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 
 app.use('/', redirectRoutes);
-
+app.use('/api/links', linksRoutes);
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
