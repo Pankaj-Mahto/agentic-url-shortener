@@ -1,50 +1,72 @@
 import mongoose from 'mongoose';
 
 const linkSchema = new mongoose.Schema({
-  userId: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false  // Keep required for new links
   },
+
   originalUrl: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
+
   shortCode: {
     type: String,
     required: true,
     unique: true,
-    lowercase: true
+    lowercase: true,
+    trim: true
   },
+
   customAlias: {
     type: String,
     sparse: true,
-    lowercase: true
+    lowercase: true,
+    trim: true
   },
+
   aiSuggestedAliases: [{
-    type: String
+    type: String,
+    lowercase: true
   }],
+
   category: {
     type: String,
-    default: 'uncategorized'
+    default: 'uncategorized',
+    lowercase: true
   },
+
   tags: [{
-    type: String
+    type: String,
+    lowercase: true
   }],
+
   clicks: {
     type: Number,
     default: 0
   },
+
+  lastClicked: {
+    type: Date
+  },
+
   isActive: {
     type: Boolean,
     default: true
   },
+
   expiresAt: {
     type: Date
   }
-}, { timestamps: true });
+}, { 
+  timestamps: true 
+});
 
-// Index for fast lookup by shortCode
-linkSchema.index({ shortCode: 1 });
+// Fix duplicate index warning
+linkSchema.index({ shortCode: 1 }, { unique: true });
+linkSchema.index({ user: 1, shortCode: 1 });
 
 export default mongoose.model('Link', linkSchema);
