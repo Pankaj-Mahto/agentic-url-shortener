@@ -100,7 +100,13 @@ export default function Dashboard() {
         }),
       });
       toast.success("Link created! ✨");
-      setLinks((prev) => [data.link, ...prev]);
+      setLinks((prev) => [
+  {
+    ...data.link,
+    _id: data.link._id || data.link.id, // 🔥 ensure id exists
+  },
+  ...prev,
+]);
       setFormData({ originalUrl: "", customAlias: "" });
       setAiSuggestions([]);
     } catch (err) {
@@ -126,22 +132,45 @@ export default function Dashboard() {
   };
 
   // ── Analytics ──────────────────────────────────────────────────
-  const handleAnalytics = async (linkId) => {
-    try {
-      setAnalyticsLoading(true);
-      setAnalyticsError(null);
-      const res = await apiCall(`/api/links/analytics/${linkId}`);
-      setAnalyticsData(res);
-      const link = links.find((l) => l._id === linkId);
-      setSelectedLink(link);
-    } catch (err) {
-      const message = err.message || "Failed to load analytics";
-      setAnalyticsError(message);
-      toast.error(message);
-    } finally {
-      setAnalyticsLoading(false);
-    }
-  };
+ const handleAnalytics = async (linkInput) => {
+  const linkId =
+    typeof linkInput === "object" ? linkInput._id : linkInput;
+
+  const link =
+    typeof linkInput === "object"
+      ? linkInput
+      : links.find((l) => l._id === linkId);
+
+  if (!link) {
+    toast.error("Link not found");
+    return;
+  }
+
+  // 👉 ALWAYS reset BEFORE opening modal
+  setAnalyticsData(null);
+  setAnalyticsError(null);
+  setAnalyticsLoading(true);
+  setSelectedLink(link);
+
+  try {
+    // 🔥 force fresh request (avoid caching issues)
+    const res = await apiCall(`/api/analytics/${linkId}?t=${Date.now()}`);
+
+    setAnalyticsData({
+      totalClicks: res?.totalClicks ?? 0,
+      uniqueVisitors: res?.uniqueVisitors ?? 0,
+      recentClicks: res?.recentClicks ?? [],
+      ...res,
+    });
+
+  } catch (err) {
+    const message = err.message || "Failed to load analytics";
+    setAnalyticsError(message);
+    toast.error(message);
+  } finally {
+    setAnalyticsLoading(false);
+  }
+};
 
   const closeAnalytics = () => {
     setSelectedLink(null);
@@ -292,7 +321,7 @@ export default function Dashboard() {
           loading={loading}
           copyingId={copyingId}
           onCopy={copyToClipboard}
-          onAnalytics={handleAnalytics}
+          onAnalytics={(link) => handleAnalytics(link)}
         />
 
         {selectedLink && (

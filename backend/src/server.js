@@ -7,6 +7,7 @@ import redirectRoutes from './routes/redirect.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import linksRoutes from './routes/links.routes.js';
 import aiRoutes from './routes/ai.routes.js';
+import analyticsRoutes from "./routes/analytics.routes.js";
 
 dotenv.config();
 
@@ -17,10 +18,12 @@ app.use(cors({ origin: process.env.CORS_ORIGIN ,credentials: true,}));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
-
-app.use('/', redirectRoutes);
 app.use('/api/links', linksRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/analytics', analyticsRoutes);
+
+// 👇 ALWAYS KEEP THIS LAST
+app.use('/', redirectRoutes);
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
